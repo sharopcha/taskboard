@@ -17,3 +17,9 @@ server:
   port: 8081
   servlet:
     contextPath: /
+
+app:
+  jwt:
+    secret: fba7814d49b53251b63bbee91d553f0beec8984112dc0f7792254bfab8e87261893c1e4e873f9e7dd1da25cee00478dacaa74d8aef97367ef9ff7b45a0d6fd8e
+    expirationMs: 900000
+    refreshExpirationMs: 604800000
