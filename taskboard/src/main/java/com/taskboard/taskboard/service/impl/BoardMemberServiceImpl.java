@@ -26,8 +26,11 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final BoardMemberRepository boardMemberRepository;
 
     @Override
-    public BoardMemberResponseDTO addMember(UUID boardId, BoardMemberRequestDTO request, String ownerUsername) {
-        Board board = getBoardOwnedByUser(boardId, ownerUsername);
+    public BoardMemberResponseDTO addMember(UUID boardId, BoardMemberRequestDTO request, String requesterUsername) {
+        Board board = getBoardById(boardId);
+
+        checkIfUserIsOwner(board, requesterUsername);
+
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -57,8 +60,10 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     }
 
     @Override
-    public BoardMemberResponseDTO updateMemberRole(UUID boardId, UUID memberId, BoardMemberRequestDTO request, String ownerUsername) {
-        Board board = getBoardOwnedByUser(boardId, ownerUsername);
+    public BoardMemberResponseDTO updateMemberRole(UUID boardId, UUID memberId, BoardMemberRequestDTO request, String requesterUsername) {
+        Board board = getBoardById(boardId);
+
+        checkIfUserIsOwner(board, requesterUsername);
 
         BoardMember member = boardMemberRepository.findById(memberId)
                 .filter(m -> m.getBoard().equals(board))
@@ -71,8 +76,10 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     }
 
     @Override
-    public void removeMember(UUID boardId, UUID memberId, String ownerUsername) {
-        Board board = getBoardOwnedByUser(boardId, ownerUsername);
+    public void removeMember(UUID boardId, UUID memberId, String requesterUsername) {
+        Board board = getBoardById(boardId);
+
+        checkIfUserIsOwner(board, requesterUsername);
 
         BoardMember member = boardMemberRepository.findById(memberId)
                 .filter(m -> m.getBoard().equals(board))
@@ -85,5 +92,17 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         return boardRepository.findById(boardId)
                 .filter(b -> b.getOwner().getUsername().equals(ownerUsername))
                 .orElseThrow(() -> new RuntimeException("Board not found or access denied"));
+    }
+
+    private Board getBoardById(UUID boardId) {
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("Board not found."));
+    }
+
+    private void checkIfUserIsOwner(Board board, String requesterUsername) {
+        // 🔒 Authorization: Only an owner can remove members
+        if (!board.getOwner().getUsername().equals(requesterUsername)) {
+            throw new RuntimeException("Access denied: Only board owner can remove members.");
+        }
     }
 }
