@@ -1,5 +1,6 @@
 package com.taskboard.taskboard.dto;
 
+import com.taskboard.taskboard.entity.BoardColumn;
 import lombok.*;
 
 import java.util.List;
@@ -15,4 +16,12 @@ public class ColumnResponseDTO {
     private String name;
     private int position;
     private List<TaskResponseDTO> tasks;
+
+    public static ColumnResponseDTO map(BoardColumn column) {
+        return ColumnResponseDTO.builder()
+                .id(column.getId())
+                .name(column.getName())
+                .position(column.getPosition())
+                .build();
+    }
 }
