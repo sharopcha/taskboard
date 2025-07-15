@@ -3,6 +3,7 @@ package com.taskboard.taskboard.controller;
 import com.taskboard.taskboard.dto.AuthResponse;
 import com.taskboard.taskboard.dto.SigninRequest;
 import com.taskboard.taskboard.dto.SignupRequest;
+import com.taskboard.taskboard.dto.TokenRefreshRequest;
 import com.taskboard.taskboard.entity.User;
 import com.taskboard.taskboard.service.AuthService;
 import jakarta.validation.Valid;
@@ -32,8 +33,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestParam("refreshToken") String refreshToken) {
-        AuthResponse response = authService.refreshAccessToken(refreshToken);
+    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+        AuthResponse response = authService.refreshAccessToken(request.getRefreshToken());
         return ResponseEntity.ok(response);
     }
 

@@ -11,9 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import io.jsonwebtoken.ExpiredJwtException;
 
-import java.time.Duration;
+
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -54,27 +56,36 @@ public class AuthService {
             throw new RuntimeException("Invalid username or password");
         }
 
+        // Generate access token as usual
         String accessToken = jwtService.generateToken(user.getUsername());
-//        String refreshToken = createRefreshToken(user);
+
+        // Create and persist a refresh token associated with the user
+        RefreshToken refreshToken = createRefreshToken(user);
 
         return AuthResponse.builder()
                 .token(accessToken)
-//                .refreshToken(refreshToken)
+                .refreshToken(refreshToken.getToken())
                 .username(user.getUsername())
                 .build();
     }
 
-    private String createRefreshToken(User user) {
-        String token = UUID.randomUUID().toString();
+    private RefreshToken createRefreshToken(User user) {
+        Optional<RefreshToken> existingTokenOpt = refreshTokenRepository.findByUser(user);
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(token)
-                .expiryDate(LocalDateTime.now().plus(Duration.ofMillis(refreshTokenDurationMs)))
-                .build();
+        RefreshToken refreshToken;
+        if (existingTokenOpt.isPresent()) {
+            refreshToken = existingTokenOpt.get();
+            refreshToken.setToken(UUID.randomUUID().toString());
+            refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
+        } else {
+            refreshToken = RefreshToken.builder()
+                    .user(user)
+                    .token(UUID.randomUUID().toString())
+                    .expiryDate(LocalDateTime.now().plusDays(7))
+                    .build();
+        }
 
-        refreshTokenRepository.save(refreshToken);
-        return token;
+        return refreshTokenRepository.save(refreshToken);
     }
 
     public AuthResponse refreshAccessToken(String refreshToken) {
@@ -87,11 +98,17 @@ public class AuthService {
         }
 
         User user = token.getUser();
+
+        // Generate new access & refresh tokens
         String newAccessToken = jwtService.generateToken(user.getUsername());
+        RefreshToken newRefreshToken = createRefreshToken(user);
+
+        // Invalidate old refresh token
+        refreshTokenRepository.delete(token);
 
         return AuthResponse.builder()
                 .token(newAccessToken)
-                .refreshToken(refreshToken) // Return the same refresh token
+                .refreshToken(newRefreshToken.getToken()) // Return the same refresh token
                 .username(user.getUsername())
                 .build();
     }
