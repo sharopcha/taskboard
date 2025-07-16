@@ -13,6 +13,5 @@ public class ColumnRequestDTO {
     @NotBlank
     private String name;
 
-    @NotNull
     private int position;
 }

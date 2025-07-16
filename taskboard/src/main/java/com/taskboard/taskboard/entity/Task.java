@@ -23,14 +23,14 @@ public class Task {
     private UUID id;
 
     @NotBlank
-    @Column(nullable = false)
+    @jakarta.persistence.Column(nullable = false)
     private String title;
 
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "column_id", nullable = false)
-    private BoardColumn column;
+    private Column column;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
@@ -38,7 +38,7 @@ public class Task {
 
     private LocalDate dueDate;
 
-    @Column(nullable = false)
+    @jakarta.persistence.Column(nullable = false)
     private int position;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)

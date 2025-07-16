@@ -24,7 +24,7 @@ public class Board {
 
     @NotBlank
     @Size(max = 100)
-    @Column(nullable = false)
+    @jakarta.persistence.Column(nullable = false)
     private String name;
 
     private String description;
@@ -34,7 +34,7 @@ public class Board {
     private User owner;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BoardColumn> columns;
+    private List<Column> columns;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardMember> members;
